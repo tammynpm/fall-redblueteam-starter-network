@@ -20,3 +20,5 @@ ssh -i <key.pem> ubuntu@<public-ip>
 scp -i <key.pem> <file-to-copy> ubuntu@<private-ip>:</path-for-file>
 ```
 
+# S3 bucket with misconfigured IAM role 
+* IAM role in AWS are identities that provide access to different AWS services based on the level of permissions they have. 
