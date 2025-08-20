@@ -89,55 +89,6 @@ resource "aws_route_table_association" "internal_assoc" {
   route_table_id = aws_route_table.internal.id
 }
 
-resource "aws_security_group" "dmz_web_ssh" {
-  name   = "${var.project_name}-dmz-web-ssh"
-  vpc_id = aws_vpc.main.id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.allowed_ssh_cidr]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = { Name = "${var.project_name}-dmz-web-ssh" }
-}
-
-resource "aws_security_group" "internal_ssh_from_dmz" {
-  name   = "${var.project_name}-internal-ssh-from-dmz"
-  vpc_id = aws_vpc.main.id
-
-  ingress {
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
-    security_groups = [aws_security_group.dmz_web_ssh.id]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = { Name = "${var.project_name}-internal-ssh-from-dmz" }
-}
-
 #jumpbox in DMZ
 resource "aws_instance" "jumpbox" {
   ami                    = data.aws_ami.ubuntu.id
@@ -247,26 +198,3 @@ resource "aws_s3_object" "index" {
   content_type = "text/html"
 }
 
-### outputs
-output "vpc_id" {
-  value = aws_vpc.main.id
-}
-output "dmz_subnet_id" {
-  value = aws_subnet.dmz.id
-}
-output "internal_subnet_id" {
-  value = aws_subnet.internal.id
-}
-output "jumpbox_public_ip" {
-  value = aws_instance.jumpbox.public_ip
-}
-output "web_public_ip" {
-  value = aws_instance.web.public_ip
-}
-output "internal_private_ip" {
-  value = aws_instance.internal-box.private_ip
-}
-output "s3_website_endpoint" {
-  description = "if bucket is created, this is the http endpoint"
-  value       = aws_s3_bucket.website.website_endpoint
-}
