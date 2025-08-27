@@ -94,8 +94,27 @@ resource "aws_instance" "jumpbox" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.dmz.id
-  key_name               = "ubuntu-server"                    // will be team-key, share private team-key.pem to everyone
+  key_name               = "ubuntu-server"                    // will be team-key, share public team-key.pem to everyone
   vpc_security_group_ids = [aws_security_group.dmz_web_ssh.id]
+
+
+  user_data = <<-EOF
+  #!bin/bash
+  # set password for ubuntu user
+  echo "ubuntu:password" | chpasswd
+
+  #enable password authentication in sshd
+  sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+  sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+  # enable root login
+  sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+  systemctl restart sshd
+
+  sudo service ssh restart
+  
+  EOF
 
   tags = { Name = "${var.project_name}-jumpbox" }
 }
